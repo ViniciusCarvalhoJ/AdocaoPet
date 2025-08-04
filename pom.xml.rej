@@ -1,0 +1,15 @@
+diff a/pom.xml b/pom.xml	(rejected hunks)
+@@ -58,6 +58,13 @@
+             <artifactId>spring-boot-starter-test</artifactId>
+             <scope>test</scope>
+         </dependency>
++
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-test</artifactId>
++            <scope>test</scope>
++        </dependency>
++
+     </dependencies>
+ 
+     <build>
