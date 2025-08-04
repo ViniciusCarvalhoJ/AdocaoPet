@@ -5,18 +5,16 @@ import br.com.alura.adopet.api.dto.ReprovacaoAdocaoDto;
 import br.com.alura.adopet.api.dto.SolicitacaoAdocaoDto;
 import br.com.alura.adopet.api.model.Adocao;
 import br.com.alura.adopet.api.model.Pet;
-import br.com.alura.adopet.api.model.StatusAdocao;
 import br.com.alura.adopet.api.model.Tutor;
 import br.com.alura.adopet.api.repository.AdocaoRepository;
 import br.com.alura.adopet.api.repository.PetRepository;
 import br.com.alura.adopet.api.repository.TutorRepository;
-import br.com.alura.adopet.api.validacoes.MensagemEmailFactory;
-import br.com.alura.adopet.api.validacoes.ValidacaoSolicitacaoAdocao;
+import br.com.alura.adopet.api.validacoes.Adocao.MensagemEmailFactory;
+import br.com.alura.adopet.api.validacoes.Adocao.ValidacaoSolicitacaoAdocao;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -44,12 +42,8 @@ public class AdocaoService {
 
         validacoes.forEach(v -> v.validar(dto));
 
-        Adocao adocao = new Adocao();
-        adocao.setData(LocalDateTime.now());
-        adocao.setStatus(StatusAdocao.AGUARDANDO_AVALIACAO);
-        adocao.setPet(pet);
-        adocao.setTutor(tutor);
-        adocao.setMotivo(dto.motivo());
+        Adocao adocao = new Adocao(tutor, pet, dto.motivo());
+
         repository.save(adocao);
 
         String mensagem = MensagemEmailFactory.gerarMensagemSolicitacaoAdocao(adocao);
@@ -59,7 +53,7 @@ public class AdocaoService {
 
     public void aprovar(AprovacaoAdocaoDto dto) {
         Adocao adocao = repository.getReferenceById(dto.idAdocao());
-        adocao.setStatus(StatusAdocao.APROVADO);
+        adocao.marcarComoAprovado();
 
         String mensagem = MensagemEmailFactory.gerarMensagemAprovacaoAdocao(adocao);
         emailService.enviarEmail(adocao.getPet().getAbrigo().getEmail(), "Adoção aprovada", mensagem);
@@ -67,8 +61,7 @@ public class AdocaoService {
 
     public void reprovar(ReprovacaoAdocaoDto dto) {
         Adocao adocao = repository.getReferenceById(dto.idAdocao());
-        adocao.setStatus(StatusAdocao.REPROVADO);
-        adocao.setJustificativaStatus(dto.justificativa());
+        adocao.marcarComoReprovado(dto.justificativa());
 
         String mensagem = MensagemEmailFactory.gerarMensagemReprovacaoAdocao(adocao);
         emailService.enviarEmail(adocao.getPet().getAbrigo().getEmail(), "Adoção reprovada", mensagem);
